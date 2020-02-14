@@ -19,6 +19,7 @@ Respring shouldn't be require if you use the Return key after setting the name.
 - NOTIFICATIONS_ID
 - Menu display name://url scheme(E.g:\"I'm Alipay://alipay://\")
 - 注销菜单
+- 清理角标
 
 You can write the name of a tweak to directly open its preferences pane. Custom paths are also supported to allow open as many Settings.app preferences panes as possible. You can write items names as paths to dive into subcategories of Settings.app categories.
 

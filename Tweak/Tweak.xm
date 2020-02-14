@@ -15,6 +15,7 @@ NSString *item7;
 NSString *item8;
 BOOL quickPrefsItemsAboveStockItems;
 BOOL removeStockItems;
+static int deviceModel;
 
 NSMutableArray<NSString*> *itemsList;
 
@@ -35,6 +36,17 @@ static UIViewController* topMostController() {
 // }
 
 
+int deviceModelNum() {
+    struct utsname systemInfo;
+    uname(&systemInfo);
+    NSString *deviceModel = [[NSString stringWithCString:systemInfo.machine
+                                               encoding:NSUTF8StringEncoding] lowercaseString];
+    NSArray *deviceArray = [deviceModel componentsSeparatedByString:@","];
+	NSString *deviceNum = [[deviceArray firstObject] stringByReplacingOccurrencesOfString:@"iphone" withString:@""];
+    
+    return [deviceNum intValue];
+}
+
 static void safeMode() {
     NSTask *t = [NSTask new];
     [t setLaunchPath:@"/usr/bin/killall"];
@@ -53,6 +65,39 @@ static void UIcache() {
     NSTask *t = [NSTask new];
     [t setLaunchPath:@"/usr/bin/uicache"];
     [t launch];
+}
+
+static void clearbadge(){
+	for (SBLeafIcon *icon in [[[objc_getClass("SBIconController") sharedInstance] model] leafIcons])
+	{
+		if ([icon isKindOfClass:NSClassFromString(@"SBFolderIcon")])
+			continue;
+
+		id badgeNumberOrString = [icon badgeNumberOrString];
+
+		if (!badgeNumberOrString)
+			continue;
+
+		[icon setBadge:nil];
+		//[icon setBadge:badgeNumberOrString];
+	}
+	//6s振动方式
+ 	if(deviceModel == 8){
+		//AudioServicesPlaySystemSound(1519);
+		AudioServicesPlaySystemSound(1520);
+		//AudioServicesPlaySystemSound(1521);
+	}else if(deviceModel > 8){	//7以上振动方式
+		if(@available(iOS 13.0, *)){
+			//7+的震动方式
+			UINotificationFeedbackGenerator *feedback = [[UINotificationFeedbackGenerator alloc] init];
+			[feedback prepare];
+			//success振动方式
+			//[feedback notificationOccurred:UINotificationFeedbackTypeSuccess];
+			//error振动方式
+			[feedback notificationOccurred:UINotificationFeedbackTypeError];
+		}
+	}
+
 }
 
 static void powerMenu() {
@@ -135,6 +180,8 @@ static void activateQuickPrefsAction(SBSApplicationShortcutItem* item) {
         Respring();
     } else if ([item.localizedTitle.lowercaseString isEqualToString:@"注销菜单"]) {
         powerMenu();
+    } else if ([item.localizedTitle.lowercaseString isEqualToString:@"清理角标"]) {
+        clearbadge();
     } else if ([item.localizedTitle.lowercaseString isEqualToString:@"safe mode"]) {
         safeMode();
     } else if ([item.localizedTitle.lowercaseString isEqualToString:@"uicache"]) {
@@ -345,6 +392,7 @@ static void reloadItemsList() {
     reloadItemsList();
 #endif
 
+	deviceModel = deviceModelNum();
     if (IS_IOS13_AND_UP) {
         %init(iOS13_up);
     } else {

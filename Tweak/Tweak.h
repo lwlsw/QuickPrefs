@@ -1,5 +1,9 @@
+#import <SpringBoard/SBIconController.h>
 #import <Foundation/Foundation.h>
 #import "NSTask.h"
+#import <objc/runtime.h>
+#import <AudioToolbox/AudioServices.h>
+#import <sys/utsname.h>
 #ifndef SIMULATOR
 #import <Cephei/HBPreferences.h>
 #endif
@@ -44,4 +48,22 @@
 
 -(BOOL)_openURL:(id)arg1 ;
 
+@end
+
+
+@interface SBIcon : NSObject
+- (id)badgeNumberOrString;
+- (void)setBadge:(id)arg1;
+@end
+
+@interface SBLeafIcon : SBIcon
+- (id)applicationBundleID;
+@end
+
+@interface SBFolderIcon : SBIcon
+-(id)folder;
+@end
+
+@interface SBIconModel : NSObject
+- (id)leafIcons;
 @end
