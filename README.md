@@ -1,3 +1,14 @@
+# 修改说明
+
+新增打开第三方app功能
+
+新增注销菜单
+
+新增简体中文支持
+
+新增清理角标功能
+
+
 # QuickPrefs
 
 **Quickly access tweak prefs with Force Touch. This is a Theos iOS tweak.**
