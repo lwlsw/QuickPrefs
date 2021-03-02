@@ -158,56 +158,6 @@ static NSString* getPrefsUrlStringFromPathString(NSString* pathString) {
     return urlString;
 }
 
-static NSArray<SBSApplicationShortcutItem*>* addItemsToStockItems(NSArray<SBSApplicationShortcutItem*>* stockItems) {
-    NSMutableArray *stockAndCustomItems = removeStockItems ? @[].mutableCopy : [stockItems mutableCopy];
-    if (!stockAndCustomItems) stockAndCustomItems = [NSMutableArray new];
-
-    DLog(@"itemsList %@", itemsList);
-
-    for (NSString *itemName in itemsList) {
-        SBSApplicationShortcutItem *item = [[%c(SBSApplicationShortcutItem) alloc] init];
-        item.localizedTitle = itemName;
-        item.bundleIdentifierToLaunch = @"com.apple.Preferences";
-        item.type = @"QuickPrefsItem";
-
-        quickPrefsItemsAboveStockItems ? [stockAndCustomItems addObject:item] : [stockAndCustomItems insertObject:item atIndex:0];
-    }
-    return stockAndCustomItems;
-}
-
-static void activateQuickPrefsAction(SBSApplicationShortcutItem* item) {
-    if ([item.localizedTitle.lowercaseString isEqualToString:@"respring"]) {
-        Respring();
-    } else if ([item.localizedTitle.lowercaseString isEqualToString:@"注销菜单"]) {
-        powerMenu();
-    } else if ([item.localizedTitle.lowercaseString isEqualToString:@"清理角标"]) {
-        clearbadge();
-    } else if ([item.localizedTitle.lowercaseString isEqualToString:@"safe mode"]) {
-        safeMode();
-    } else if ([item.localizedTitle.lowercaseString isEqualToString:@"uicache"]) {
-        UIcache();
-    } else if ([item.localizedTitle.lowercaseString containsString:@"://"]) {
-		//打开url scheme
-		NSRange range = [item.localizedTitle rangeOfString:@"://"];
-        NSString *urlStr = [item.localizedTitle substringFromIndex:range.location+3];
-		//showAlert(urlStr);
-        //urlopen(urlStr);
-        NSURL *url = [NSURL URLWithString:urlStr];
-		[[UIApplication sharedApplication] _openURL:url];
-    } else { //open pref pane
-        NSString *urlString = getPrefsUrlStringFromPathString(item.localizedTitle);
-        DLog(@"Should open %@", urlString);
-
-        NSURL*url = [NSURL URLWithString:urlString];
-
-        // if ([[UIApplication sharedApplication] canOpenURL:url]) { //unfortunately returns YES whatever the name is
-            [[UIApplication sharedApplication] _openURL:url];
-        // } else {
-        //     showAlert(@"QuickPrefs cannot open this item. Please double check the name of the tweak and retry.");
-        // }
-    }
-}
-
 static NSString* getReadableTitleFromPathString(NSString *pathString) {
     NSString *title = pathString;
 
@@ -234,6 +184,57 @@ static NSString* getReadableTitleFromPathString(NSString *pathString) {
     }
 
     return title;
+}
+
+static NSArray<SBSApplicationShortcutItem*>* addItemsToStockItems(NSArray<SBSApplicationShortcutItem*>* stockItems) {
+    NSMutableArray *stockAndCustomItems = removeStockItems ? @[].mutableCopy : [stockItems mutableCopy];
+    if (!stockAndCustomItems) stockAndCustomItems = [NSMutableArray new];
+
+    DLog(@"itemsList %@", itemsList);
+
+    for (NSString *itemName in itemsList) {
+        SBSApplicationShortcutItem *item = [[%c(SBSApplicationShortcutItem) alloc] init];
+        item.localizedTitle = getReadableTitleFromPathString(itemName);
+        item.pathStr = itemName;
+        item.bundleIdentifierToLaunch = @"com.apple.Preferences";
+        item.type = @"QuickPrefsItem";
+
+        quickPrefsItemsAboveStockItems ? [stockAndCustomItems addObject:item] : [stockAndCustomItems insertObject:item atIndex:0];
+    }
+    return stockAndCustomItems;
+}
+
+static void activateQuickPrefsAction(SBSApplicationShortcutItem* item) {
+    if ([item.pathStr.lowercaseString isEqualToString:@"respring"]) {
+        Respring();
+    } else if ([item.pathStr.lowercaseString isEqualToString:@"注销菜单"]) {
+        powerMenu();
+    } else if ([item.pathStr.lowercaseString isEqualToString:@"清理角标"]) {
+        clearbadge();
+    } else if ([item.pathStr.lowercaseString isEqualToString:@"safe mode"]) {
+        safeMode();
+    } else if ([item.pathStr.lowercaseString isEqualToString:@"uicache"]) {
+        UIcache();
+    } else if ([item.pathStr.lowercaseString containsString:@"://"]) {
+		//打开url scheme
+		NSRange range = [item.pathStr rangeOfString:@"://"];
+        NSString *urlStr = [item.pathStr substringFromIndex:range.location+3];
+		//showAlert(urlStr);
+        //urlopen(urlStr);
+        NSURL *url = [NSURL URLWithString:urlStr];
+		[[UIApplication sharedApplication] _openURL:url];
+    } else { //open pref pane
+        NSString *urlString = getPrefsUrlStringFromPathString(item.pathStr);
+        DLog(@"Should open %@", urlString);
+
+        NSURL*url = [NSURL URLWithString:urlString];
+
+        // if ([[UIApplication sharedApplication] canOpenURL:url]) { //unfortunately returns YES whatever the name is
+            [[UIApplication sharedApplication] _openURL:url];
+        // } else {
+        //     showAlert(@"QuickPrefs cannot open this item. Please double check the name of the tweak and retry.");
+        // }
+    }
 }
 
 
@@ -266,20 +267,24 @@ static NSString* getReadableTitleFromPathString(NSString *pathString) {
 %end //hook SBUIAppIconForceTouchController
 
 
-%hook SBUIAction
+// %hook SBUIAction
 
--(id)initWithTitle:(id)title subtitle:(id)arg2 image:(id)image badgeView:(id)arg4 handler:(/*^block*/id)arg5 {
-    title = getReadableTitleFromPathString(title);
+// -(id)initWithTitle:(id)title subtitle:(id)arg2 image:(id)image badgeView:(id)arg4 handler:(/*^block*/id)arg5 {
+//     title = getReadableTitleFromPathString(title);
 
-    return %orig;
-}
+//     return %orig;
+// }
 
-%end //hook SBUIAction
+// %end //hook SBUIAction
 
 %end //end group iOS11_12
 
 
 %group iOS13_up
+
+%hook SBSApplicationShortcutItem
+%property (nonatomic,copy) NSString * pathStr;
+%end
 
 %hook SBIconView
 
@@ -308,15 +313,15 @@ static NSString* getReadableTitleFromPathString(NSString *pathString) {
 %end //hook SBIconView
 
 
-%hook _UIContextMenuActionView
+// %hook _UIContextMenuActionView
 
--(id)initWithTitle:(id)title subtitle:(id)arg2 image:(id)arg3 {
-    title = getReadableTitleFromPathString(title);
+// -(id)initWithTitle:(id)title subtitle:(id)arg2 image:(id)arg3 {
+//     title = getReadableTitleFromPathString(title);
 
-    return %orig;
-}
+//     return %orig;
+// }
 
-%end //hook SBUIAction
+// %end //hook SBUIAction
 
 %end //end group iOS13_up
 
